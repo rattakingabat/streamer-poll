@@ -3,7 +3,7 @@
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
-import { system_message_types, sendSystemMessage, eventSource, event_types } from "../../../../script.js";
+import { sendMessageAsUser, system_message_types, sendSystemMessage, eventSource, event_types } from "../../../../script.js";
 
 
 // Obtém o contexto do SillyTavern
@@ -180,7 +180,7 @@ function displayPoll(options) {
         });
     });
 
-    sendSystemMessage(system_message_types.GENERIC, pollMessage);
+    sendMessageAsUser(pollMessage);
 
     // Adiciona a mensagem ao chat como a personagem
     // sendSystemMessage({
@@ -202,7 +202,7 @@ function displayPollResult(winningOption) {
         winningOption
     });
 
-    sendSystemMessage(system_message_types.GENERIC, resultMessage);
+    sendMessageAsUser(resultMessage);
 
     // // Adiciona a mensagem ao chat como a personagem
     // context.addMessage({
