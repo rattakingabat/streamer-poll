@@ -3,7 +3,7 @@
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
-import { eventSource, event_types } from "../../../script.js";
+import { eventSource, event_types } from "../../../../script.js";
 
 eventSource.on(event_types.MESSAGE_RECEIVED, handleMessage);
 
