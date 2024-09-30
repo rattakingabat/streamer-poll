@@ -86,8 +86,7 @@ loadConfig();
 
 // Função para obter o nome da personagem atual
 function getCharacterName() {
-    const character = context.characters[context.characterId];
-    return character.name;
+    return "";
 }
 
 // Função para verificar e disparar o evento aleatório
@@ -177,8 +176,7 @@ function triggerPollEvent() {
 
 // Função para apresentar a enquete
 function displayPoll(options) {
-    const characterName = getCharacterName();
-    let pollMessage = formatMessage(messages.pollIntro, { characterName });
+    let pollMessage = messages.pollIntro;
 
     options.forEach((option, index) => {
         pollMessage += formatMessage(messages.pollOption, {
@@ -194,9 +192,7 @@ function displayPoll(options) {
 
 // Função para apresentar o resultado da enquete
 function displayPollResult(winningOption) {
-    const characterName = getCharacterName();
     const resultMessage = formatMessage(messages.pollResult, {
-        characterName,
         winningOption
     });
 
