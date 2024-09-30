@@ -1,13 +1,8 @@
 // index.js
-// Extensão Streamer Poll Event para SillyTavern com nome da personagem automático e logs no console
+// Extensão Streamer Poll Event para SillyTavern com configuração em JSON
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
-import { eventSource, event_types } from "../../../../script.js";
-import { registerSlashCommand } from '../../../slash-commands.js';
-
-// Importa a biblioteca js-yaml
-importScripts('js-yaml.min.js');
 
 // Obtém o contexto do SillyTavern
 const context = getContext();
@@ -25,15 +20,13 @@ let numberOfOptions = 4; // Número de opções na enquete (pode ser ajustado)
 let pollOptions = [];
 let messages = {};
 
-// Função para carregar o arquivo de configuração YAML
+// Função para carregar o arquivo de configuração JSON
 function loadConfig() {
-    const configUrl = new URL('config.yaml', import.meta.url).href;
+    const configUrl = new URL('config.json', import.meta.url).href;
 
     fetch(configUrl)
-        .then(response => response.text())
-        .then(yamlText => {
-            const config = jsyaml.load(yamlText);
-            // characterName não é mais carregado do arquivo de configuração
+        .then(response => response.json())
+        .then(config => {
             pollOptions = config.pollOptions || [];
             messages = config.messages || {};
 
@@ -209,13 +202,39 @@ function onUserMessage(data) {
 }
 
 // Registra o evento de mensagem enviada
-eventSource.on(event_types.MESSAGE_SENT, onUserMessage);
+if (window.eventSource && window.eventSource.on) {
+    window.eventSource.on('messageSent', onUserMessage);
+} else {
+    console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
+}
 
-// Comando para redefinir as variáveis (pode ser útil para testes)
-registerSlashCommand("resetpoll", (namedArgs, unnamedArgs) => {
-    messageCount = 0;
-    eventChance = 0.1;
-    cooldownCounter = 0;
-    console.log("Streamer Poll Event: Variáveis resetadas pelo comando /resetpoll.");
-    return "Variáveis de enquete resetadas.";
-}, [], "Reseta as variáveis da extensão Streamer Poll Event.");
+// Comando para redefinir as variáveis (opcional)
+if (window.SlashCommandParser && window.SlashCommand) {
+    const { SlashCommandParser, SlashCommand } = window;
+
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'resetpoll',
+        callback: (namedArgs, unnamedArgs) => {
+            messageCount = 0;
+            eventChance = 0.1;
+            cooldownCounter = 0;
+            console.log("Streamer Poll Event: Variáveis resetadas pelo comando /resetpoll.");
+            return "Variáveis de enquete resetadas.";
+        },
+        aliases: [],
+        returns: 'Mensagem de confirmação',
+        namedArgumentList: [],
+        unnamedArgumentList: [],
+        helpString: `
+            <div>
+                Reseta as variáveis da extensão Streamer Poll Event.
+            </div>
+            <div>
+                <strong>Uso:</strong>
+                <pre><code class="language-stscript">/resetpoll</code></pre>
+            </div>
+        `,
+    }));
+} else {
+    console.warn("Streamer Poll Event: Não foi possível registrar o comando /resetpoll. SlashCommandParser não está disponível.");
+}
