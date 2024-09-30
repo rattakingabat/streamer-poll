@@ -3,7 +3,7 @@
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
-import { sendSystemMessage, eventSource, event_types } from "../../../../script.js";
+import { system_message_types, sendSystemMessage, eventSource, event_types } from "../../../../script.js";
 
 
 // Obtém o contexto do SillyTavern
