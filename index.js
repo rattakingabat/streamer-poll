@@ -35,3 +35,5 @@ function registerEvent() {
         console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
     }
 }
+
+registerEvent();
