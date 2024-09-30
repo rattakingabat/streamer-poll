@@ -3,6 +3,9 @@
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
+import { eventSource, event_types } from "../../../script.js";
+
+eventSource.on(event_types.MESSAGE_RECEIVED, handleMessage);
 
 // Obtém o contexto do SillyTavern
 const context = getContext();
@@ -193,12 +196,9 @@ function displayPollResult(winningOption) {
 }
 
 // Evento que é chamado a cada nova mensagem enviada pelo usuário
-function onUserMessage(data) {
-    // Verifica se a mensagem foi enviada pelo usuário
-    if (data.is_user) {
-        console.log("Streamer Poll Event: Nova mensagem do usuário detectada.");
-        checkForRandomEvent();
-    }
+function handleMessage(data) {
+    console.log("Streamer Poll Event: Nova mensagem do usuário detectada.");
+    checkForRandomEvent();
 }
 
 // Função para registrar o evento
