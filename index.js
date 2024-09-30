@@ -180,14 +180,16 @@ function displayPoll(options) {
         });
     });
 
+    sendSystemMessage(system_message_types.GENERIC, pollMessage);
+
     // Adiciona a mensagem ao chat como a personagem
-    sendSystemMessage({
-        name: characterName,
-        is_user: false,
-        is_system: false,
-        send_date: Date.now(),
-        mes: pollMessage
-    });
+    // sendSystemMessage({
+    //     name: characterName,
+    //     is_user: false,
+    //     is_system: false,
+    //     send_date: Date.now(),
+    //     mes: pollMessage
+    // });
 
     console.log("Streamer Poll Event: Enquete apresentada no chat.");
 }
@@ -200,14 +202,16 @@ function displayPollResult(winningOption) {
         winningOption
     });
 
-    // Adiciona a mensagem ao chat como a personagem
-    context.addMessage({
-        name: characterName,
-        is_user: false,
-        is_system: false,
-        send_date: Date.now(),
-        mes: resultMessage
-    });
+    sendSystemMessage(system_message_types.GENERIC, resultMessage);
+
+    // // Adiciona a mensagem ao chat como a personagem
+    // context.addMessage({
+    //     name: characterName,
+    //     is_user: false,
+    //     is_system: false,
+    //     send_date: Date.now(),
+    //     mes: resultMessage
+    // });
 
     console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}"`);
 }
