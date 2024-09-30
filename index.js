@@ -5,7 +5,6 @@
 import { getContext } from "../../../extensions.js";
 import { sendMessageAsUser, system_message_types, sendSystemMessage, eventSource, event_types } from "../../../../script.js";
 
-
 // Obtém o contexto do SillyTavern
 const context = getContext();
 
@@ -49,11 +48,12 @@ function loadConfig() {
         .then(config => {
             pollOptions = config.pollOptions || [];
             messages = config.messages || {};
+            numberOfOptions = config.numberOfOptions || 4;
 
             console.log("Streamer Poll Event: Configuração carregada com sucesso.");
             console.log("Opções da enquete:", pollOptions);
             console.log("Mensagens personalizadas:", messages);
-            console.log("Nome personagem:", getCharacterName());
+            console.log("Número de opções na enquete:", numberOfOptions);
         })
         .catch(error => {
             console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
@@ -75,6 +75,7 @@ function loadConfig() {
                 pollOption: "🔹 {index}. {option}\n",
                 pollResult: `🎉 *{characterName} anuncia animadamente:* "E a opção vencedora é... **{winningOption}**! Obrigada por participarem, pessoal!"`
             };
+            numberOfOptions = 4;
 
             console.log("Streamer Poll Event: Usando configurações padrão.");
         });
@@ -87,16 +88,6 @@ loadConfig();
 function getCharacterName() {
     const character = context.characters[context.characterId];
     return character.name;
-}
-
-// Função para embaralhar um array
-function shuffleArray(array) {
-    const shuffled = array.slice();
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
 }
 
 // Função para verificar e disparar o evento aleatório
@@ -136,6 +127,24 @@ function formatMessage(template, data) {
     return template.replace(/{(.*?)}/g, (match, key) => data[key.trim()] || "");
 }
 
+// Função para selecionar N elementos aleatórios de um array sem repetição
+function getRandomElements(array, n) {
+    let result = [];
+    let len = array.length;
+    let taken = new Array(len);
+
+    if (n > len) n = len;
+
+    while (result.length < n) {
+        let randomIndex = Math.floor(Math.random() * len);
+        if (!taken[randomIndex]) {
+            result.push(array[randomIndex]);
+            taken[randomIndex] = true;
+        }
+    }
+    return result;
+}
+
 // Função para disparar a enquete
 function triggerPollEvent() {
     if (pollOptions.length === 0) {
@@ -143,9 +152,11 @@ function triggerPollEvent() {
         return;
     }
 
+    // Garante que não selecione mais opções do que as disponíveis
+    const optionsToSelect = Math.min(numberOfOptions, pollOptions.length);
+
     // Seleciona aleatoriamente as opções da enquete
-    const shuffledOptions = shuffleArray(pollOptions);
-    const options = shuffledOptions.slice(0, numberOfOptions);
+    const options = getRandomElements(pollOptions, optionsToSelect);
 
     console.log("Streamer Poll Event: Opções selecionadas para a enquete:", options);
 
@@ -178,15 +189,6 @@ function displayPoll(options) {
 
     sendMessageAsUser(pollMessage);
 
-    // Adiciona a mensagem ao chat como a personagem
-    // sendSystemMessage({
-    //     name: characterName,
-    //     is_user: false,
-    //     is_system: false,
-    //     send_date: Date.now(),
-    //     mes: pollMessage
-    // });
-
     console.log("Streamer Poll Event: Enquete apresentada no chat.");
 }
 
@@ -199,15 +201,6 @@ function displayPollResult(winningOption) {
     });
 
     sendMessageAsUser(resultMessage);
-
-    // // Adiciona a mensagem ao chat como a personagem
-    // context.addMessage({
-    //     name: characterName,
-    //     is_user: false,
-    //     is_system: false,
-    //     send_date: Date.now(),
-    //     mes: resultMessage
-    // });
 
     console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}"`);
 }
