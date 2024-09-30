@@ -86,7 +86,8 @@ loadConfig();
 function getCharacterName() {
     // Verifica se há uma personagem selecionada
     if (context.characterName && context.characterName !== '') {
-        return context.characterName;
+        const character = context.characters[context.characterId];
+        return character.name;
     } else {
         // Caso não haja uma personagem selecionada, retorna um nome padrão
         return "Personagem";
