@@ -2,8 +2,8 @@
 // Extensão Streamer Poll Event para SillyTavern com nome da personagem automático e logs no console
 
 // Importa as funções necessárias
-import { getContext } from "../../extensions.js";
-import { eventSource, event_types } from "../../../script.js";
+import { getContext } from "../../../extensions.js";
+import { eventSource, event_types } from "../../../../script.js";
 import { registerSlashCommand } from '../../../slash-commands.js';
 
 // Importa a biblioteca js-yaml
