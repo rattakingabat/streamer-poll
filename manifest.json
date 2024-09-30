@@ -1,0 +1,12 @@
+{
+  "display_name": "Streamer Poll Event",
+  "loading_order": 1,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "",
+  "author": "Seu Nome",
+  "version": "1.0.1",
+  "homePage": "https://github.com/seu-usuario/streamer-poll-event",
+  "auto_update": true
+}

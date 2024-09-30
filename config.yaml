@@ -1,0 +1,18 @@
+# config.yaml
+
+pollOptions:
+  - "Jogar um novo game"
+  - "Fazer um desafio"
+  - "Responder perguntas"
+  - "Contar uma história engraçada"
+  - "Mostrar bastidores"
+  - "Iniciar um sorteio"
+  - "Realizar uma votação de popularidade"
+  - "Fazer um tutorial ao vivo"
+  - "Compartilhar dicas exclusivas"
+  - "Convidar um espectador para participar"
+
+messages:
+  pollIntro: "👩‍💻 *{characterName} sorri para a câmera e diz:* \"E aí, pessoal! Vamos fazer uma enquete rápida! O que vocês acham?\"\n\n"
+  pollOption: "🔹 {index}. {option}\n"
+  pollResult: "🎉 *{characterName} anuncia animadamente:* \"E a opção vencedora é... **{winningOption}**! Obrigada por participarem, pessoal!\""
