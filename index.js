@@ -202,9 +202,9 @@ function handleMessage(data) {
 
 // Função para registrar o evento
 function registerEvent() {
-    if (context.eventSource && context.eventSource.on) {
-        context.eventSource.on('MESSAGE_RECEIVED', handleMessage);
-        console.log("Streamer Poll Event: Evento MESSAGE_SENT registrado com sucesso.");
+    if (eventSource && eventSource.on) {
+        eventSource.on('MESSAGE_RECEIVED', handleMessage);
+        console.log("Streamer Poll Event: Evento MESSAGE_RECEIVED registrado com sucesso.");
     } else {
         console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
     }
