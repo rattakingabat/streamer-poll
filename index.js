@@ -210,13 +210,8 @@ function registerEvent() {
     }
 }
 
-// Aguarda o contexto estar pronto antes de registrar o evento
-if (context && context.eventSource) {
-    registerEvent();
-} else {
-    // Tenta novamente após um pequeno atraso
-    setTimeout(registerEvent, 1000);
-}
+registerEvent();
+
 
 // Comando para redefinir as variáveis (opcional)
 if (window.SlashCommandParser && window.SlashCommand) {
