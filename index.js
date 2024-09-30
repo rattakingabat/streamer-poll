@@ -84,14 +84,8 @@ loadConfig();
 
 // Função para obter o nome da personagem atual
 function getCharacterName() {
-    // Verifica se há uma personagem selecionada
-    if (context.characterName && context.characterName !== '') {
-        const character = context.characters[context.characterId];
-        return character.name;
-    } else {
-        // Caso não haja uma personagem selecionada, retorna um nome padrão
-        return "Personagem";
-    }
+    const character = context.characters[context.characterId];
+    return character.name;
 }
 
 // Função para embaralhar um array
