@@ -1,5 +1,5 @@
 // index.js
-// Extensão Streamer Poll Event para SillyTavern com configuração em JSON
+// Extensão Streamer Poll Event para SillyTavern com correções no registro do evento
 
 // Importa as funções necessárias
 import { getContext } from "../../../extensions.js";
@@ -201,11 +201,22 @@ function onUserMessage(data) {
     }
 }
 
-// Registra o evento de mensagem enviada
-if (window.eventSource && window.eventSource.on) {
-    window.eventSource.on('messageSent', onUserMessage);
+// Função para registrar o evento
+function registerEvent() {
+    if (context.eventSource && context.eventSource.on) {
+        context.eventSource.on('MESSAGE_SENT', onUserMessage);
+        console.log("Streamer Poll Event: Evento MESSAGE_SENT registrado com sucesso.");
+    } else {
+        console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
+    }
+}
+
+// Aguarda o contexto estar pronto antes de registrar o evento
+if (context && context.eventSource) {
+    registerEvent();
 } else {
-    console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
+    // Tenta novamente após um pequeno atraso
+    setTimeout(registerEvent, 1000);
 }
 
 // Comando para redefinir as variáveis (opcional)
