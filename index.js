@@ -1,5 +1,5 @@
 // index.js
-// Extensão Streamer Poll Event para SillyTavern com nome da personagem automático
+// Extensão Streamer Poll Event para SillyTavern com nome da personagem automático e logs no console
 
 // Importa as funções necessárias
 import { getContext } from "../../extensions.js";
@@ -36,9 +36,13 @@ function loadConfig() {
             // characterName não é mais carregado do arquivo de configuração
             pollOptions = config.pollOptions || [];
             messages = config.messages || {};
+
+            console.log("Streamer Poll Event: Configuração carregada com sucesso.");
+            console.log("Opções da enquete:", pollOptions);
+            console.log("Mensagens personalizadas:", messages);
         })
         .catch(error => {
-            console.error("Erro ao carregar o arquivo de configuração:", error);
+            console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
             // Define valores padrão caso ocorra um erro
             pollOptions = [
                 "Jogar um novo game",
@@ -57,6 +61,8 @@ function loadConfig() {
                 pollOption: "🔹 {index}. {option}\n",
                 pollResult: `🎉 *{characterName} anuncia animadamente:* "E a opção vencedora é... **{winningOption}**! Obrigada por participarem, pessoal!"`
             };
+
+            console.log("Streamer Poll Event: Usando configurações padrão.");
         });
 }
 
@@ -86,24 +92,33 @@ function shuffleArray(array) {
 
 // Função para verificar e disparar o evento aleatório
 function checkForRandomEvent() {
+    console.log("Streamer Poll Event: Verificando se o evento deve ocorrer...");
+
     if (cooldownCounter > 0) {
         cooldownCounter--;
+        console.log(`Streamer Poll Event: Em cooldown. Mensagens restantes no cooldown: ${cooldownCounter}`);
         return;
     }
 
     messageCount++;
+    console.log(`Streamer Poll Event: Contador de mensagens: ${messageCount}`);
 
     const randomNumber = Math.random();
+    console.log(`Streamer Poll Event: Número aleatório gerado: ${randomNumber}`);
+    console.log(`Streamer Poll Event: Chance atual do evento: ${eventChance}`);
 
     if (randomNumber < eventChance) {
+        console.log("Streamer Poll Event: Evento disparado!");
         triggerPollEvent();
         // Resetar após o evento ocorrer
         messageCount = 0;
         eventChance = 0.1;
         cooldownCounter = cooldownMessages;
+        console.log(`Streamer Poll Event: Cooldown iniciado por ${cooldownMessages} mensagens.`);
     } else {
         // Aumentar a chance para a próxima mensagem
         eventChance = Math.min(eventChance + increaseRate, maxChance);
+        console.log(`Streamer Poll Event: Evento não ocorreu. Nova chance do evento: ${eventChance}`);
     }
 }
 
@@ -115,7 +130,7 @@ function formatMessage(template, data) {
 // Função para disparar a enquete
 function triggerPollEvent() {
     if (pollOptions.length === 0) {
-        console.warn("Nenhuma opção de enquete disponível.");
+        console.warn("Streamer Poll Event: Nenhuma opção de enquete disponível.");
         return;
     }
 
@@ -123,12 +138,16 @@ function triggerPollEvent() {
     const shuffledOptions = shuffleArray(pollOptions);
     const options = shuffledOptions.slice(0, numberOfOptions);
 
+    console.log("Streamer Poll Event: Opções selecionadas para a enquete:", options);
+
     // Apresenta a enquete no roleplay
     displayPoll(options);
 
     // Seleciona aleatoriamente a opção vencedora
     const winningIndex = Math.floor(Math.random() * options.length);
     const winningOption = options[winningIndex];
+
+    console.log(`Streamer Poll Event: Opção vencedora será anunciada após 5 segundos: "${winningOption}"`);
 
     // Apresenta o resultado após um tempo (simulando a duração da enquete)
     setTimeout(() => {
@@ -156,6 +175,8 @@ function displayPoll(options) {
         send_date: Date.now(),
         mes: pollMessage
     });
+
+    console.log("Streamer Poll Event: Enquete apresentada no chat.");
 }
 
 // Função para apresentar o resultado da enquete
@@ -174,12 +195,15 @@ function displayPollResult(winningOption) {
         send_date: Date.now(),
         mes: resultMessage
     });
+
+    console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}"`);
 }
 
 // Evento que é chamado a cada nova mensagem enviada pelo usuário
 function onUserMessage(data) {
     // Verifica se a mensagem foi enviada pelo usuário
     if (data.is_user) {
+        console.log("Streamer Poll Event: Nova mensagem do usuário detectada.");
         checkForRandomEvent();
     }
 }
@@ -192,5 +216,6 @@ registerSlashCommand("resetpoll", (namedArgs, unnamedArgs) => {
     messageCount = 0;
     eventChance = 0.1;
     cooldownCounter = 0;
+    console.log("Streamer Poll Event: Variáveis resetadas pelo comando /resetpoll.");
     return "Variáveis de enquete resetadas.";
 }, [], "Reseta as variáveis da extensão Streamer Poll Event.");
