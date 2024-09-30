@@ -53,6 +53,7 @@ function loadConfig() {
             console.log("Streamer Poll Event: Configuração carregada com sucesso.");
             console.log("Opções da enquete:", pollOptions);
             console.log("Mensagens personalizadas:", messages);
+            console.log("Nome personagem:", getCharacterName());
         })
         .catch(error => {
             console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
