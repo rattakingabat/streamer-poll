@@ -187,7 +187,7 @@ function simulatePollResults(selectedOptions, neverOptions) {
     let votes = {};
 
     // Generate total votes between 5000 and 10000
-    const totalVotes = Math.floor(Math.random() * 5001) + 5000;
+    const totalVotes = Math.floor(Math.random() * 3001) + 7000;
 
     // Generate percentages for neverOptions (0-2%), including zero
     let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3));
