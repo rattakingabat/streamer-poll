@@ -1,10 +1,13 @@
 // index.js
-// Extensão Streamer Poll Event para SillyTavern com correções no registro do evento
+// Extensão Streamer Poll Event para SillyTavern com correções no registro do evento e toggle
 
 // Importa as funções necessárias
 import { sendMessageAsUser, eventSource, event_types } from "../../../../script.js";
+import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
+
 
 // Variáveis globais da extensão
+let isActive = false; // Script começa desligado
 let messageCount = 0;
 let eventChance = 0.1; // Chance inicial de 10%
 const increaseRate = 0.05; // Aumenta 5% a cada mensagem sem evento
@@ -21,7 +24,9 @@ let messages = {};
 
 function handleMessage(data) {
     console.log("Streamer Poll Event: Nova mensagem do usuário detectada.");
-    checkForRandomEvent();
+    if (isActive) {
+        checkForRandomEvent();
+    }
 }
 
 // Função para registrar o evento
@@ -175,46 +180,44 @@ function triggerPollEvent() {
         });
     });
 
-
     sendMessageAsUser(pollMessage + "\n\n\n" + simulatePollResults(selectedOptions, neverOptionsToAdd));
-
 }
 
 // Função para simular os resultados da votação
 function simulatePollResults(selectedOptions, neverOptions) {
-    // Initialize the votes object
+    // Inicializa o objeto de votos
     let votes = {};
 
-    // Generate total votes between 5000 and 10000
+    // Gera votos totais entre 5000 e 10000
     const totalVotes = Math.floor(Math.random() * 3001) + 7000;
 
-    // Generate percentages for neverOptions (0-2%), including zero
+    // Gera porcentagens para neverOptions (0-2%), incluindo zero
     let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3));
 
-    // Sum of the neverOptions percentages
+    // Soma das porcentagens de neverOptions
     const totalNeverPercentage = neverOptionPercentages.reduce((a, b) => a + b, 0);
 
-    // Remaining percentage to distribute among selectedOptions
+    // Porcentagem restante para distribuir entre selectedOptions
     let remainingPercentage = 100 - totalNeverPercentage;
 
-    // Ensure the winningOption has the highest percentage
+    // Garante que winningOption tenha a maior porcentagem
     const winningIndex = Math.floor(Math.random() * selectedOptions.length);
     const winningOption = selectedOptions[winningIndex];
 
-    // Other options excluding the winningOption
+    // Outras opções excluindo winningOption
     let otherOptions = selectedOptions.filter((_, index) => index !== winningIndex);
 
-    // Set minimum winningPercentage to be at least half of remainingPercentage plus one
+    // Define porcentagem mínima para winningOption
     let minWinningPercentage = Math.floor(remainingPercentage / 2) + 1;
-    let maxWinningPercentage = remainingPercentage - otherOptions.length; // Ensure at least 1% for each otherOption
+    let maxWinningPercentage = remainingPercentage - otherOptions.length; // Garante pelo menos 1% para cada otherOption
 
-    // winningPercentage is random between minWinningPercentage and maxWinningPercentage
+    // Porcentagem de winningOption é aleatória entre minWinningPercentage e maxWinningPercentage
     let winningPercentage = Math.floor(Math.random() * (maxWinningPercentage - minWinningPercentage + 1)) + minWinningPercentage;
 
-    // Remaining percentage after assigning to winningOption
+    // Porcentagem restante após atribuir a winningOption
     let remainingAfterWinning = remainingPercentage - winningPercentage;
 
-    // Distribute remainingAfterWinning among otherOptions
+    // Distribui remainingAfterWinning entre otherOptions
     let otherPercentages = [];
     if (otherOptions.length > 0) {
         let totalOtherPercentage = 0;
@@ -222,18 +225,18 @@ function simulatePollResults(selectedOptions, neverOptions) {
             let optionsLeft = otherOptions.length - index - 1;
             if (optionsLeft > 0) {
                 let maxPercentage = remainingAfterWinning - totalOtherPercentage - optionsLeft;
-                let percentage = Math.floor(Math.random() * (maxPercentage)) + 1; // Ensure at least 1%
+                let percentage = Math.floor(Math.random() * (maxPercentage)) + 1; // Garante pelo menos 1%
                 otherPercentages.push(percentage);
                 totalOtherPercentage += percentage;
             } else {
-                // Last otherOption
+                // Última otherOption
                 let percentage = remainingAfterWinning - totalOtherPercentage;
                 otherPercentages.push(percentage);
             }
         });
     }
 
-    // Compile the votes
+    // Compila os votos
     votes[winningOption] = winningPercentage;
     otherOptions.forEach((option, index) => {
         votes[option] = otherPercentages[index];
@@ -242,16 +245,16 @@ function simulatePollResults(selectedOptions, neverOptions) {
         votes[option] = neverOptionPercentages[index];
     });
 
-    // Calculate the number of votes for each option
+    // Calcula o número de votos para cada opção
     let voteCounts = {};
     for (let option in votes) {
         voteCounts[option] = Math.round((votes[option] / 100) * totalVotes);
     }
 
-    // Sort the options by percentage in descending order
+    // Ordena as opções por porcentagem em ordem decrescente
     const sortedOptions = Object.keys(votes).sort((a, b) => votes[b] - votes[a]);
 
-    // Create the vote breakdown
+    // Cria o detalhamento dos votos
     let voteBreakdown = "";
     sortedOptions.forEach((option, index) => {
         voteBreakdown += `${index + 1}. ${option} - ${votes[option]}% (${voteCounts[option]} votos)\n`;
@@ -267,3 +270,30 @@ function simulatePollResults(selectedOptions, neverOptions) {
     return resultMessage;
 }
 
+// Registrar os comandos de barra
+if (typeof SlashCommandParser !== 'undefined') {
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'resetStreamerPoll',
+        callback: (namedArgs, unnamedArgs) => {
+            isActive = true;
+            messageCount = 0;
+            eventChance = 0.1;
+            cooldownCounter = 0;
+            return "Streamer Poll Event foi reiniciado e ativado.";
+        },
+        description: 'Reinicia e ativa o Streamer Poll Event.',
+    }));
+
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'stopStreamerPoll',
+        callback: (namedArgs, unnamedArgs) => {
+            isActive = false;
+            return "Streamer Poll Event foi desativado.";
+        },
+        description: 'Desativa o Streamer Poll Event.',
+    }));
+
+    console.log("Streamer Poll Event: Comandos de barra registrados.");
+} else {
+    console.warn("Streamer Poll Event: SlashCommandParser não está disponível.");
+}
