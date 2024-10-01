@@ -17,8 +17,9 @@ const cooldownMessages = 10; // Cooldown de 10 mensagens após um evento
 let cooldownCounter = 0; // Contador de cooldown
 
 // Variáveis configuráveis
-let numberOfOptions = 4; // Número de opções na enquete (pode ser ajustado)
+let numberOfOptions = 4; // Número total de opções na enquete
 let pollOptions = [];
+let neverPollOptions = [];
 let messages = {};
 
 function handleMessage(data) {
@@ -47,13 +48,16 @@ function loadConfig() {
         .then(response => response.json())
         .then(config => {
             pollOptions = config.pollOptions || [];
+            neverPollOptions = config.neverPollOptions || [];
             messages = config.messages || {};
             numberOfOptions = config.numberOfOptions || 4;
 
             console.log("Streamer Poll Event: Configuração carregada com sucesso.");
             console.log("Opções da enquete:", pollOptions);
+            console.log("Opções que nunca serão selecionadas:", neverPollOptions);
             console.log("Mensagens personalizadas:", messages);
             console.log("Número de opções na enquete:", numberOfOptions);
+            console.log("Nome personagem:", getCharacterName());
         })
         .catch(error => {
             console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
@@ -70,6 +74,7 @@ function loadConfig() {
                 "Compartilhar dicas exclusivas",
                 "Convidar um espectador para participar"
             ];
+            neverPollOptions = ["Opção secreta 1", "Opção secreta 2"];
             messages = {
                 pollIntro: `👩‍💻 *{characterName} sorri para a câmera e diz:* "E aí, pessoal! Vamos fazer uma enquete rápida! O que vocês acham?"\n\n`,
                 pollOption: "🔹 {index}. {option}\n",
@@ -86,7 +91,8 @@ loadConfig();
 
 // Função para obter o nome da personagem atual
 function getCharacterName() {
-    return "";
+    const character = context.characters[context.characterId];
+    return character.name;
 }
 
 // Função para verificar e disparar o evento aleatório
@@ -151,20 +157,39 @@ function triggerPollEvent() {
         return;
     }
 
-    // Garante que não selecione mais opções do que as disponíveis
-    const optionsToSelect = Math.min(numberOfOptions, pollOptions.length);
+    // Seleciona dois itens aleatórios de neverPollOptions
+    const neverOptionsToAdd = getRandomElements(neverPollOptions, 2);
+
+    // Cria uma lista de opções disponíveis excluindo as neverPollOptions
+    const optionsPool = pollOptions.filter(option => !neverPollOptions.includes(option));
+
+    if (optionsPool.length === 0) {
+        console.warn("Streamer Poll Event: Nenhuma opção disponível após excluir neverPollOptions.");
+        return;
+    }
+
+    // Calcula quantas opções precisamos selecionar do optionsPool
+    const optionsToSelect = Math.min(numberOfOptions - neverOptionsToAdd.length, optionsPool.length);
 
     // Seleciona aleatoriamente as opções da enquete
-    const options = getRandomElements(pollOptions, optionsToSelect);
+    const selectedOptions = getRandomElements(optionsPool, optionsToSelect);
+
+    // Adiciona as neverPollOptions selecionadas ao final da lista
+    const options = selectedOptions.concat(neverOptionsToAdd);
 
     console.log("Streamer Poll Event: Opções selecionadas para a enquete:", options);
 
     // Apresenta a enquete no roleplay
     displayPoll(options);
 
-    // Seleciona aleatoriamente a opção vencedora
-    const winningIndex = Math.floor(Math.random() * options.length);
-    const winningOption = options[winningIndex];
+    // Seleciona aleatoriamente a opção vencedora entre as selectedOptions (excluindo as neverPollOptions)
+    if (selectedOptions.length === 0) {
+        console.warn("Streamer Poll Event: Nenhuma opção disponível para ser selecionada como vencedora.");
+        return;
+    }
+
+    const winningIndex = Math.floor(Math.random() * selectedOptions.length);
+    const winningOption = selectedOptions[winningIndex];
 
     console.log(`Streamer Poll Event: Opção vencedora será anunciada após 5 segundos: "${winningOption}"`);
 
@@ -176,7 +201,8 @@ function triggerPollEvent() {
 
 // Função para apresentar a enquete
 function displayPoll(options) {
-    let pollMessage = messages.pollIntro;
+    const characterName = getCharacterName();
+    let pollMessage = formatMessage(messages.pollIntro, { characterName });
 
     options.forEach((option, index) => {
         pollMessage += formatMessage(messages.pollOption, {
@@ -192,7 +218,9 @@ function displayPoll(options) {
 
 // Função para apresentar o resultado da enquete
 function displayPollResult(winningOption) {
+    const characterName = getCharacterName();
     const resultMessage = formatMessage(messages.pollResult, {
+        characterName,
         winningOption
     });
 
