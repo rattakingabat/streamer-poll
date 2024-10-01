@@ -105,11 +105,11 @@ function checkForRandomEvent() {
 
     if (randomNumber < eventChance) {
         console.log("Streamer Poll Event: Evento disparado!");
-        triggerPollEvent();
         // Resetar após o evento ocorrer
         messageCount = 0;
         eventChance = 0.1;
         cooldownCounter = cooldownMessages;
+        triggerPollEvent();
         console.log(`Streamer Poll Event: Cooldown iniciado por ${cooldownMessages} mensagens.`);
     } else {
         // Aumentar a chance para a próxima mensagem

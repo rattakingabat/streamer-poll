@@ -28,6 +28,6 @@
   "messages": {
     "pollIntro": "*The Stream Bot shows a message* \"$1000 in Donations have been made in total. New torture poll Activated!\" \n\n",
     "pollOption": " \"{index}. {option}\"\n",
-    "pollResult": " *The Stream Bot shows a message* \"The poll has ended! The winning option was:  **{winningOption}**! Donate more for new tortures!\""
+    "pollResult": " *The Stream Bot shows a message* \"The poll has ended! The winning option was:  **{winningOption}**! with {winningPercentage} of votes. Donate more for new tortures! Total viewer votes: {totalVotes}\\n\\n{voteBreakdown}"
   }
 }
