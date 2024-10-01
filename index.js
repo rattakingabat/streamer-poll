@@ -13,7 +13,8 @@ const cooldownMessages = 10; // Cooldown de 10 mensagens após um evento
 let cooldownCounter = 0; // Contador de cooldown
 
 // Variáveis configuráveis
-let numberOfOptions = 6; // Total de opções na enquete (4 pollOptions + 2 neverPollOptions)
+const numPollOptions = 4; // Número de opções de pollOptions
+const numNeverPollOptions = 2; // Número de opções de neverPollOptions
 let pollOptions = [];
 let neverPollOptions = [];
 let messages = {};
@@ -46,13 +47,11 @@ function loadConfig() {
             pollOptions = config.pollOptions || [];
             neverPollOptions = config.neverPollOptions || [];
             messages = config.messages || {};
-            numberOfOptions = config.numberOfOptions || 6; // Ajustado para 6
 
             console.log("Streamer Poll Event: Configuração carregada com sucesso.");
             console.log("Opções da enquete:", pollOptions);
             console.log("Opções que nunca serão selecionadas:", neverPollOptions);
             console.log("Mensagens personalizadas:", messages);
-            console.log("Número de opções na enquete:", numberOfOptions);
         })
         .catch(error => {
             console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
@@ -79,7 +78,6 @@ Total de votos: {totalVotes}
 
 {voteBreakdown}`
             };
-            numberOfOptions = 6; // Ajustado para 6
 
             console.log("Streamer Poll Event: Usando configurações padrão.");
         });
@@ -150,24 +148,21 @@ function triggerPollEvent() {
         return;
     }
 
-    // Seleciona 2 itens aleatórios de neverPollOptions
-    const neverOptionsToAdd = getRandomElements(neverPollOptions, 2);
+    // Seleciona 2 itens de neverPollOptions
+    const neverOptionsToAdd = getRandomElements(neverPollOptions, numNeverPollOptions);
 
     // Cria uma lista de opções disponíveis excluindo as neverPollOptions
     const optionsPool = pollOptions.filter(option => !neverPollOptions.includes(option));
 
-    if (optionsPool.length === 0) {
-        console.warn("Streamer Poll Event: Nenhuma opção disponível após excluir neverPollOptions.");
+    if (optionsPool.length < numPollOptions) {
+        console.warn("Streamer Poll Event: Não há opções suficientes para selecionar.");
         return;
     }
 
-    // Calcula quantas opções precisamos selecionar do optionsPool (4)
-    const optionsToSelect = Math.min(4, optionsPool.length);
-
     // Seleciona aleatoriamente as opções da enquete
-    const selectedOptions = getRandomElements(optionsPool, optionsToSelect);
+    const selectedOptions = getRandomElements(optionsPool, numPollOptions);
 
-    // Adiciona as neverPollOptions selecionadas ao final da lista
+    // Combina as opções
     const options = selectedOptions.concat(neverOptionsToAdd);
 
     console.log("Streamer Poll Event: Opções selecionadas para a enquete:", options);
@@ -207,7 +202,7 @@ function simulatePollResults(selectedOptions, neverOptions) {
 
     otherOptions.forEach((option, index) => {
         let maxPercentage = remainingPercentage - (otherOptions.length - index - 1);
-        let percentage = Math.floor(Math.random() * (maxPercentage));
+        let percentage = Math.floor(Math.random() * (maxPercentage + 1)); // Inclui o maxPercentage
         otherPercentages.push(percentage);
         remainingPercentage -= percentage;
     });
