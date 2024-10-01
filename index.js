@@ -57,7 +57,6 @@ function loadConfig() {
             console.log("Opções que nunca serão selecionadas:", neverPollOptions);
             console.log("Mensagens personalizadas:", messages);
             console.log("Número de opções na enquete:", numberOfOptions);
-            console.log("Nome personagem:", getCharacterName());
         })
         .catch(error => {
             console.error("Streamer Poll Event: Erro ao carregar o arquivo de configuração:", error);
