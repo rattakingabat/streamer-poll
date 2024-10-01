@@ -2,11 +2,7 @@
 // Extensão Streamer Poll Event para SillyTavern com correções no registro do evento
 
 // Importa as funções necessárias
-import { getContext } from "../../../extensions.js";
-import { sendMessageAsUser, system_message_types, sendSystemMessage, eventSource, event_types } from "../../../../script.js";
-
-// Obtém o contexto do SillyTavern
-const context = getContext();
+import { sendMessageAsUser, eventSource, event_types } from "../../../../script.js";
 
 // Variáveis globais da extensão
 let messageCount = 0;
@@ -17,7 +13,7 @@ const cooldownMessages = 10; // Cooldown de 10 mensagens após um evento
 let cooldownCounter = 0; // Contador de cooldown
 
 // Variáveis configuráveis
-let numberOfOptions = 4; // Número total de opções na enquete
+let numberOfOptions = 6; // Total de opções na enquete (4 pollOptions + 2 neverPollOptions)
 let pollOptions = [];
 let neverPollOptions = [];
 let messages = {};
@@ -50,7 +46,7 @@ function loadConfig() {
             pollOptions = config.pollOptions || [];
             neverPollOptions = config.neverPollOptions || [];
             messages = config.messages || {};
-            numberOfOptions = config.numberOfOptions || 4;
+            numberOfOptions = config.numberOfOptions || 6; // Ajustado para 6
 
             console.log("Streamer Poll Event: Configuração carregada com sucesso.");
             console.log("Opções da enquete:", pollOptions);
@@ -75,11 +71,15 @@ function loadConfig() {
             ];
             neverPollOptions = ["Opção secreta 1", "Opção secreta 2"];
             messages = {
-                pollIntro: `👩‍💻 *{characterName} sorri para a câmera e diz:* "E aí, pessoal! Vamos fazer uma enquete rápida! O que vocês acham?"\n\n`,
+                pollIntro: `👩‍💻 *Sorrindo para a câmera, ela diz:* "E aí, pessoal! Vamos fazer uma enquete rápida! O que vocês acham?"\n\n`,
                 pollOption: "🔹 {index}. {option}\n",
-                pollResult: `🎉 *{characterName} anuncia animadamente:* "E a opção vencedora é... **{winningOption}** com {winningPercentage}% dos votos! Obrigada por participarem, pessoal!"\n\n{voteBreakdown}`
+                pollResult: `🎉 *Ela anuncia animadamente:* "E a opção vencedora é... **{winningOption}** com {winningPercentage}% dos votos! Obrigada por participarem, pessoal!"
+
+Total de votos: {totalVotes}
+
+{voteBreakdown}`
             };
-            numberOfOptions = 4;
+            numberOfOptions = 6; // Ajustado para 6
 
             console.log("Streamer Poll Event: Usando configurações padrão.");
         });
@@ -87,8 +87,6 @@ function loadConfig() {
 
 // Chama a função para carregar a configuração ao iniciar a extensão
 loadConfig();
-
-// Função para obter o nome da personagem atual
 
 // Função para verificar e disparar o evento aleatório
 function checkForRandomEvent() {
@@ -152,7 +150,7 @@ function triggerPollEvent() {
         return;
     }
 
-    // Seleciona dois itens aleatórios de neverPollOptions
+    // Seleciona 2 itens aleatórios de neverPollOptions
     const neverOptionsToAdd = getRandomElements(neverPollOptions, 2);
 
     // Cria uma lista de opções disponíveis excluindo as neverPollOptions
@@ -163,8 +161,8 @@ function triggerPollEvent() {
         return;
     }
 
-    // Calcula quantas opções precisamos selecionar do optionsPool
-    const optionsToSelect = Math.min(numberOfOptions - neverOptionsToAdd.length, optionsPool.length);
+    // Calcula quantas opções precisamos selecionar do optionsPool (4)
+    const optionsToSelect = Math.min(4, optionsPool.length);
 
     // Seleciona aleatoriamente as opções da enquete
     const selectedOptions = getRandomElements(optionsPool, optionsToSelect);
@@ -186,8 +184,8 @@ function simulatePollResults(selectedOptions, neverOptions) {
     // Inicializa os votos
     let votes = {};
 
-    // Total de votos simulados
-    const totalVotes = 1000;
+    // Gera o total de votos entre 5000 e 10000
+    const totalVotes = Math.floor(Math.random() * 5001) + 5000; // 5000 a 10000
 
     // Gera porcentagens para neverOptions (0-2%)
     let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3)); // 0-2%
@@ -203,17 +201,14 @@ function simulatePollResults(selectedOptions, neverOptions) {
     const winningIndex = Math.floor(Math.random() * selectedOptions.length);
     const winningOption = selectedOptions[winningIndex];
 
-    // Distribui porcentagens aleatórias para as opções, garantindo que o winningOption tenha a maior
+    // Distribui porcentagens aleatórias para as outras opções
     let otherOptions = selectedOptions.filter((_, index) => index !== winningIndex);
     let otherPercentages = [];
 
-    // Gera porcentagens aleatórias para as outras opções
-    let totalOtherPercentage = 0;
     otherOptions.forEach((option, index) => {
         let maxPercentage = remainingPercentage - (otherOptions.length - index - 1);
         let percentage = Math.floor(Math.random() * (maxPercentage));
         otherPercentages.push(percentage);
-        totalOtherPercentage += percentage;
         remainingPercentage -= percentage;
     });
 
@@ -229,24 +224,30 @@ function simulatePollResults(selectedOptions, neverOptions) {
         votes[option] = neverOptionPercentages[index];
     });
 
+    // Calcula o número de votos para cada opção
+    let voteCounts = {};
+    for (let option in votes) {
+        voteCounts[option] = Math.round((votes[option] / 100) * totalVotes);
+    }
+
     // Ordena as opções por porcentagem decrescente
     const sortedOptions = Object.keys(votes).sort((a, b) => votes[b] - votes[a]);
 
     // Cria o detalhamento dos votos
     let voteBreakdown = "";
     sortedOptions.forEach((option, index) => {
-        voteBreakdown += `${index + 1}. ${option} - ${votes[option]}%\n`;
+        voteBreakdown += `${index + 1}. ${option} - ${votes[option]}% (${voteCounts[option]} votos)\n`;
     });
 
     // Exibe o resultado após um tempo (simulando a duração da enquete)
     setTimeout(() => {
-        displayPollResult(winningOption, winningPercentage, voteBreakdown);
+        displayPollResult(winningOption, winningPercentage, totalVotes, voteBreakdown);
     }, 5000); // 5000 milissegundos = 5 segundos
 }
 
 // Função para apresentar a enquete
 function displayPoll(options) {
-    let pollMessage = formatMessage(messages.pollIntro);
+    let pollMessage = formatMessage(messages.pollIntro, {});
 
     options.forEach((option, index) => {
         pollMessage += formatMessage(messages.pollOption, {
@@ -261,10 +262,11 @@ function displayPoll(options) {
 }
 
 // Função para apresentar o resultado da enquete
-function displayPollResult(winningOption, winningPercentage, voteBreakdown) {
+function displayPollResult(winningOption, winningPercentage, totalVotes, voteBreakdown) {
     const resultMessage = formatMessage(messages.pollResult, {
         winningOption,
         winningPercentage,
+        totalVotes,
         voteBreakdown
     });
 
