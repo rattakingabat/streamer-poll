@@ -167,11 +167,18 @@ function triggerPollEvent() {
 
     console.log("Streamer Poll Event: Opções selecionadas para a enquete:", options);
 
-    // Apresenta a enquete no roleplay
-    displayPoll(options);
+    let pollMessage = formatMessage(messages.pollIntro, {});
 
-    // Simula os resultados da votação
-    simulatePollResults(selectedOptions, neverOptionsToAdd);
+    options.forEach((option, index) => {
+        pollMessage += formatMessage(messages.pollOption, {
+            index: index + 1,
+            option
+        });
+    });
+
+
+    sendMessageAsUser(pollMessage + "\n\n\n" + simulatePollResults(selectedOptions, neverOptionsToAdd));
+
 }
 
 // Função para simular os resultados da votação
@@ -234,30 +241,6 @@ function simulatePollResults(selectedOptions, neverOptions) {
         voteBreakdown += `${index + 1}. ${option} - ${votes[option]}% (${voteCounts[option]} votos)\n`;
     });
 
-    // Exibe o resultado após um tempo (simulando a duração da enquete)
-    setTimeout(() => {
-        displayPollResult(winningOption, winningPercentage, totalVotes, voteBreakdown);
-    }, 5000); // 5000 milissegundos = 5 segundos
-}
-
-// Função para apresentar a enquete
-function displayPoll(options) {
-    let pollMessage = formatMessage(messages.pollIntro, {});
-
-    options.forEach((option, index) => {
-        pollMessage += formatMessage(messages.pollOption, {
-            index: index + 1,
-            option
-        });
-    });
-
-    sendMessageAsUser(pollMessage);
-
-    console.log("Streamer Poll Event: Enquete apresentada no chat.");
-}
-
-// Função para apresentar o resultado da enquete
-function displayPollResult(winningOption, winningPercentage, totalVotes, voteBreakdown) {
     const resultMessage = formatMessage(messages.pollResult, {
         winningOption,
         winningPercentage,
@@ -265,7 +248,8 @@ function displayPollResult(winningOption, winningPercentage, totalVotes, voteBre
         voteBreakdown
     });
 
-    sendMessageAsUser(resultMessage);
+    return resultMessage;
 
-    console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}" com ${winningPercentage}% dos votos.`);
 }
+
+
