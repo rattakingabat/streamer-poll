@@ -183,41 +183,58 @@ function triggerPollEvent() {
 
 // Função para simular os resultados da votação
 function simulatePollResults(selectedOptions, neverOptions) {
-    // Inicializa os votos
+    // Initialize the votes object
     let votes = {};
 
-    // Gera o total de votos entre 5000 e 10000
-    const totalVotes = Math.floor(Math.random() * 5001) + 5000; // 5000 a 10000
+    // Generate total votes between 5000 and 10000
+    const totalVotes = Math.floor(Math.random() * 5001) + 5000;
 
-    // Gera porcentagens para neverOptions (0-2%)
-    let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3)); // 0-2%
+    // Generate percentages for neverOptions (0-2%), including zero
+    let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3));
 
-    // Soma das porcentagens dos neverOptions
+    // Sum of the neverOptions percentages
     const totalNeverPercentage = neverOptionPercentages.reduce((a, b) => a + b, 0);
 
-    // Porcentagem restante para distribuir entre selectedOptions
+    // Remaining percentage to distribute among selectedOptions
     let remainingPercentage = 100 - totalNeverPercentage;
 
-    // Garante que o winningOption tenha a maior porcentagem
-    // Seleciona aleatoriamente a opção vencedora entre as selectedOptions
+    // Ensure the winningOption has the highest percentage
     const winningIndex = Math.floor(Math.random() * selectedOptions.length);
     const winningOption = selectedOptions[winningIndex];
 
-    // Distribui porcentagens aleatórias para as outras opções
+    // Other options excluding the winningOption
     let otherOptions = selectedOptions.filter((_, index) => index !== winningIndex);
+
+    // Set minimum winningPercentage to be at least half of remainingPercentage plus one
+    let minWinningPercentage = Math.floor(remainingPercentage / 2) + 1;
+    let maxWinningPercentage = remainingPercentage - otherOptions.length; // Ensure at least 1% for each otherOption
+
+    // winningPercentage is random between minWinningPercentage and maxWinningPercentage
+    let winningPercentage = Math.floor(Math.random() * (maxWinningPercentage - minWinningPercentage + 1)) + minWinningPercentage;
+
+    // Remaining percentage after assigning to winningOption
+    let remainingAfterWinning = remainingPercentage - winningPercentage;
+
+    // Distribute remainingAfterWinning among otherOptions
     let otherPercentages = [];
+    if (otherOptions.length > 0) {
+        let totalOtherPercentage = 0;
+        otherOptions.forEach((option, index) => {
+            let optionsLeft = otherOptions.length - index - 1;
+            if (optionsLeft > 0) {
+                let maxPercentage = remainingAfterWinning - totalOtherPercentage - optionsLeft;
+                let percentage = Math.floor(Math.random() * (maxPercentage)) + 1; // Ensure at least 1%
+                otherPercentages.push(percentage);
+                totalOtherPercentage += percentage;
+            } else {
+                // Last otherOption
+                let percentage = remainingAfterWinning - totalOtherPercentage;
+                otherPercentages.push(percentage);
+            }
+        });
+    }
 
-    otherOptions.forEach((option, index) => {
-        let maxPercentage = remainingPercentage - (otherOptions.length - index - 1);
-        let percentage = Math.floor(Math.random() * (maxPercentage + 1)); // Inclui o maxPercentage
-        otherPercentages.push(percentage);
-        remainingPercentage -= percentage;
-    });
-
-    // Atribui o restante da porcentagem ao winningOption
-    const winningPercentage = remainingPercentage;
-
-    // Compila os resultados
+    // Compile the votes
     votes[winningOption] = winningPercentage;
     otherOptions.forEach((option, index) => {
         votes[option] = otherPercentages[index];
@@ -226,16 +243,16 @@ function simulatePollResults(selectedOptions, neverOptions) {
         votes[option] = neverOptionPercentages[index];
     });
 
-    // Calcula o número de votos para cada opção
+    // Calculate the number of votes for each option
     let voteCounts = {};
     for (let option in votes) {
         voteCounts[option] = Math.round((votes[option] / 100) * totalVotes);
     }
 
-    // Ordena as opções por porcentagem decrescente
+    // Sort the options by percentage in descending order
     const sortedOptions = Object.keys(votes).sort((a, b) => votes[b] - votes[a]);
 
-    // Cria o detalhamento dos votos
+    // Create the vote breakdown
     let voteBreakdown = "";
     sortedOptions.forEach((option, index) => {
         voteBreakdown += `${index + 1}. ${option} - ${votes[option]}% (${voteCounts[option]} votos)\n`;
@@ -249,7 +266,5 @@ function simulatePollResults(selectedOptions, neverOptions) {
     });
 
     return resultMessage;
-
 }
-
 
