@@ -14,7 +14,7 @@ let messageCount = 0;
 let eventChance = 0.1; // Chance inicial de 10%
 const increaseRate = 0.05; // Aumenta 5% a cada mensagem sem evento
 const maxChance = 0.5; // Chance máxima de 50%
-const cooldownMessages = 10; // Cooldown de 10 mensagens após um evento
+const cooldownMessages = 7; // Cooldown de 7 mensagens após um evento
 let cooldownCounter = 0; // Contador de cooldown
 
 // Variáveis configuráveis
