@@ -28,7 +28,6 @@ function handleMessage(data) {
 function registerEvent() {
     if (eventSource && eventSource.on) {
         eventSource.on(event_types.MESSAGE_RECEIVED, handleMessage);
-        eventSource.on(event_types.MESSAGE_SENT, handleMessage);
         console.log("Streamer Poll Event: Evento MESSAGE_RECEIVED registrado com sucesso.");
     } else {
         console.warn("Streamer Poll Event: Não foi possível registrar o evento MESSAGE_SENT. eventSource não está disponível.");
