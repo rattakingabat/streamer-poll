@@ -4,6 +4,8 @@
 // Importa as funções necessárias
 import { sendMessageAsUser, eventSource, event_types } from "../../../../script.js";
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
+import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
+
 
 
 // Variáveis globais da extensão
