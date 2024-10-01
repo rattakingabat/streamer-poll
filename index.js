@@ -6,8 +6,6 @@ import { sendMessageAsUser, eventSource, event_types } from "../../../../script.
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 
-
-
 // Variáveis globais da extensão
 let isActive = false; // Script começa desligado
 let messageCount = 0;
@@ -23,6 +21,10 @@ const numNeverPollOptions = 2; // Número de opções de neverPollOptions
 let pollOptions = [];
 let neverPollOptions = [];
 let messages = {};
+
+// Histórico das opções selecionadas nas últimas 7 rodadas
+const pollHistoryRounds = []; // array de arrays, cada array contém as opções selecionadas em uma rodada
+const maxHistoryRounds = 7; // número máximo de rodadas a serem mantidas no histórico
 
 function handleMessage(data) {
     console.log("Streamer Poll Event: Nova mensagem do usuário detectada.");
@@ -157,8 +159,11 @@ function triggerPollEvent() {
     // Seleciona 2 itens de neverPollOptions
     const neverOptionsToAdd = getRandomElements(neverPollOptions, numNeverPollOptions);
 
-    // Cria uma lista de opções disponíveis excluindo as neverPollOptions
-    const optionsPool = pollOptions.filter(option => !neverPollOptions.includes(option));
+    // Obtém as opções selecionadas nas últimas 7 rodadas
+    const optionsInHistory = pollHistoryRounds.flat();
+
+    // Cria uma lista de opções disponíveis excluindo as neverPollOptions e as opções selecionadas nas últimas 7 rodadas
+    const optionsPool = pollOptions.filter(option => !neverPollOptions.includes(option) && !optionsInHistory.includes(option));
 
     if (optionsPool.length < numPollOptions) {
         console.warn("Streamer Poll Event: Não há opções suficientes para selecionar.");
@@ -181,6 +186,14 @@ function triggerPollEvent() {
             option
         });
     });
+
+    // Adiciona as opções selecionadas ao histórico
+    pollHistoryRounds.push(selectedOptions);
+
+    // Mantém apenas as últimas 7 rodadas no histórico
+    if (pollHistoryRounds.length > maxHistoryRounds) {
+        pollHistoryRounds.shift();
+    }
 
     sendMessageAsUser(pollMessage + "\n\n\n" + simulatePollResults(selectedOptions, neverOptionsToAdd));
 }
