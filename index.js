@@ -77,7 +77,7 @@ function loadConfig() {
             messages = {
                 pollIntro: `👩‍💻 *{characterName} sorri para a câmera e diz:* "E aí, pessoal! Vamos fazer uma enquete rápida! O que vocês acham?"\n\n`,
                 pollOption: "🔹 {index}. {option}\n",
-                pollResult: `🎉 *{characterName} anuncia animadamente:* "E a opção vencedora é... **{winningOption}**! Obrigada por participarem, pessoal!"`
+                pollResult: `🎉 *{characterName} anuncia animadamente:* "E a opção vencedora é... **{winningOption}** com {winningPercentage}% dos votos! Obrigada por participarem, pessoal!"\n\n{voteBreakdown}`
             };
             numberOfOptions = 4;
 
@@ -88,6 +88,11 @@ function loadConfig() {
 // Chama a função para carregar a configuração ao iniciar a extensão
 loadConfig();
 
+// Função para obter o nome da personagem atual
+function getCharacterName() {
+    const character = context.characters[context.characterId];
+    return character.name;
+}
 
 // Função para verificar e disparar o evento aleatório
 function checkForRandomEvent() {
@@ -176,26 +181,77 @@ function triggerPollEvent() {
     // Apresenta a enquete no roleplay
     displayPoll(options);
 
-    // Seleciona aleatoriamente a opção vencedora entre as selectedOptions (excluindo as neverPollOptions)
-    if (selectedOptions.length === 0) {
-        console.warn("Streamer Poll Event: Nenhuma opção disponível para ser selecionada como vencedora.");
-        return;
-    }
+    // Simula os resultados da votação
+    simulatePollResults(selectedOptions, neverOptionsToAdd);
+}
 
+// Função para simular os resultados da votação
+function simulatePollResults(selectedOptions, neverOptions) {
+    // Inicializa os votos
+    let votes = {};
+
+    // Total de votos simulados
+    const totalVotes = 1000;
+
+    // Gera porcentagens para neverOptions (0-2%)
+    let neverOptionPercentages = neverOptions.map(() => Math.floor(Math.random() * 3)); // 0-2%
+
+    // Soma das porcentagens dos neverOptions
+    const totalNeverPercentage = neverOptionPercentages.reduce((a, b) => a + b, 0);
+
+    // Porcentagem restante para distribuir entre selectedOptions
+    let remainingPercentage = 100 - totalNeverPercentage;
+
+    // Garante que o winningOption tenha a maior porcentagem
+    // Seleciona aleatoriamente a opção vencedora entre as selectedOptions
     const winningIndex = Math.floor(Math.random() * selectedOptions.length);
     const winningOption = selectedOptions[winningIndex];
 
-    console.log(`Streamer Poll Event: Opção vencedora será anunciada após 5 segundos: "${winningOption}"`);
+    // Distribui porcentagens aleatórias para as opções, garantindo que o winningOption tenha a maior
+    let otherOptions = selectedOptions.filter((_, index) => index !== winningIndex);
+    let otherPercentages = [];
 
-    // Apresenta o resultado após um tempo (simulando a duração da enquete)
+    // Gera porcentagens aleatórias para as outras opções
+    let totalOtherPercentage = 0;
+    otherOptions.forEach((option, index) => {
+        let maxPercentage = remainingPercentage - (otherOptions.length - index - 1);
+        let percentage = Math.floor(Math.random() * (maxPercentage));
+        otherPercentages.push(percentage);
+        totalOtherPercentage += percentage;
+        remainingPercentage -= percentage;
+    });
+
+    // Atribui o restante da porcentagem ao winningOption
+    const winningPercentage = remainingPercentage;
+
+    // Compila os resultados
+    votes[winningOption] = winningPercentage;
+    otherOptions.forEach((option, index) => {
+        votes[option] = otherPercentages[index];
+    });
+    neverOptions.forEach((option, index) => {
+        votes[option] = neverOptionPercentages[index];
+    });
+
+    // Ordena as opções por porcentagem decrescente
+    const sortedOptions = Object.keys(votes).sort((a, b) => votes[b] - votes[a]);
+
+    // Cria o detalhamento dos votos
+    let voteBreakdown = "";
+    sortedOptions.forEach((option, index) => {
+        voteBreakdown += `${index + 1}. ${option} - ${votes[option]}%\n`;
+    });
+
+    // Exibe o resultado após um tempo (simulando a duração da enquete)
     setTimeout(() => {
-        displayPollResult(winningOption);
+        displayPollResult(winningOption, winningPercentage, voteBreakdown);
     }, 5000); // 5000 milissegundos = 5 segundos
 }
 
 // Função para apresentar a enquete
 function displayPoll(options) {
-    let pollMessage = formatMessage(messages.pollIntro);
+    const characterName = getCharacterName();
+    let pollMessage = formatMessage(messages.pollIntro, { characterName });
 
     options.forEach((option, index) => {
         pollMessage += formatMessage(messages.pollOption, {
@@ -210,12 +266,16 @@ function displayPoll(options) {
 }
 
 // Função para apresentar o resultado da enquete
-function displayPollResult(winningOption) {
+function displayPollResult(winningOption, winningPercentage, voteBreakdown) {
+    const characterName = getCharacterName();
     const resultMessage = formatMessage(messages.pollResult, {
-        winningOption
+        characterName,
+        winningOption,
+        winningPercentage,
+        voteBreakdown
     });
 
     sendMessageAsUser(resultMessage);
 
-    console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}"`);
+    console.log(`Streamer Poll Event: Resultado da enquete apresentado no chat: "${winningOption}" com ${winningPercentage}% dos votos.`);
 }
