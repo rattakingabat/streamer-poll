@@ -308,6 +308,25 @@ if (typeof SlashCommandParser !== 'undefined') {
         description: 'Desativa o Streamer Poll Event.',
     }));
 
+    // Novo comando para disparar a enquete manualmente
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'triggerPoll',
+        callback: (namedArgs, unnamedArgs) => {
+            if (isActive) {
+                triggerPollEvent();
+                // Atualiza o cooldown e as chances após o disparo manual
+                messageCount = 0;
+                eventChance = 0.1;
+                cooldownCounter = cooldownMessages;
+                console.log(`Streamer Poll Event: Cooldown iniciado por ${cooldownMessages} mensagens após disparo manual.`);
+                return "Enquete disparada manualmente.";
+            } else {
+                return "Streamer Poll Event está desativado. Use /resetStreamerPoll para ativá-lo.";
+            }
+        },
+        description: 'Dispara manualmente uma enquete.',
+    }));
+
     console.log("Streamer Poll Event: Comandos de barra registrados.");
 } else {
     console.warn("Streamer Poll Event: SlashCommandParser não está disponível.");
